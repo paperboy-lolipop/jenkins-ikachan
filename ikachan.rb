@@ -7,6 +7,9 @@ notice_url = ENV['notice_url']
 channel    = ENV['channel']
 job        = ENV['job']
 url        = ENV['url']
+git_commit = ENV['git_commit']
+git_branch = ENV['git_branch']
+git_url    = ENV['git_url']
 
 http = Net::HTTP.new(URI(join_url).host, URI(join_url).port)
 req = Net::HTTP::Post.new(URI(join_url).path)
@@ -31,7 +34,27 @@ result = if code.nil?
            "\x02\x0301,%02d%s\x0f" % [code, result]
          end
 
-message = "Jenkins (%s): %s - %s" % [job, result, url]
+github = if git_url.include?('github.com')
+  git_url.match(/github\.com[:\/](.*)\/(.*)\.git\Z/)
+end
+
+pull_request_url = if github && git_branch.include?('origin/pr')
+  pull_request_id = git_branch.match(/origin\/pr\/(\d+)\/merge/)[1]
+  "https://github.com/#{github[1]}/#{github[2]}/pull/#{pull_request_id}"
+end
+
+commit_url = if github && !git_commit.eql?('')
+  "https://github.com/#{github[1]}/#{github[2]}/commit/#{git_commit}"
+end
+
+message = if pull_request_url
+  "Jenkins (%s): %s - %s, pull request: %s" % [job, result, url, pull_request_url]
+else if commit_url
+  "Jenkins (%s): %s - %s, commit: %s" % [job, result, url, commit_url]
+else
+  "Jenkins (%s): %s - %s" % [job, result, url]
+end
+
 http = Net::HTTP.new(URI(notice_url).host, URI(notice_url).port)
 req = Net::HTTP::Post.new(URI(notice_url).path)
 req.form_data = { 'channel' => channel, 'message' => message }
