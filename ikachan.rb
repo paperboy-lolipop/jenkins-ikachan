@@ -47,7 +47,7 @@ end
 
 message = if pull_request_url
   "Jenkins (%s): %s - %s, pull request: %s" % [job, result, url, pull_request_url]
-else if commit_url
+elsif commit_url
   "Jenkins (%s): %s - %s, commit: %s" % [job, result, url, commit_url]
 else
   "Jenkins (%s): %s - %s" % [job, result, url]
