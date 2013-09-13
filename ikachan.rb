@@ -22,17 +22,15 @@ res = http.request(req)
 xml = res.body
 
 result = xml.match(/<result>(.+?)</)[1]
+
 code = case result
-       when 'ABORTED'; 8
-       when 'SUCCESS'; 3
-       when 'FAILURE'; 4
-       else          ; nil
-       end
-result = if code.nil?
-           result
-         else
-           "\x02\x0301,%02d%s\x0f" % [code, result]
-         end
+when 'ABORTED' then 8
+when 'SUCCESS' then 3
+when 'FAILURE' then 4
+else nil
+end
+
+result = "\x02\x0301,%02d%s\x0f" % [code, result] if code
 
 github = if git_url.include?('github.com')
   git_url.match(/github\.com[:\/](.*)\/(.*)\.git\Z/)
